@@ -14,7 +14,7 @@ TILE_SIZE = (50, 50)  # Resize each tile to 50x50 pixels
 if not os.path.exists(SAVE_FOLDER):
     os.makedirs(SAVE_FOLDER)
 
-# Bing Image Search URL (Change query for different images)
+# Bing Image Search URL
 SEARCH_URL = f"https://www.bing.com/images/search?q={SEARCH_QUERY.replace(' ', '+')}&form=HDRSC2"
 
 # Fetch search results
