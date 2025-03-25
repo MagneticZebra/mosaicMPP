@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 
 # Configuration
-SEARCH_QUERY = "black and white texture"
+SEARCH_QUERY = "black and white images"
 SAVE_FOLDER = "tiles"
 NUM_IMAGES = 200  # Number of images to download
 TILE_SIZE = (50, 50)  # Resize each tile to 50x50 pixels
