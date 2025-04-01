@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 
 #include <omp.h>
+#include <vector>
+#include <string>
 
 #define TILE_SIZE 50
 #define TILE_MATCH_RES 5
@@ -54,27 +56,29 @@ void load_tiles(const char *dir_path)
     }
 
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        if (strstr(entry->d_name, ".jpg") || strstr(entry->d_name, ".png"))
-        {
-            tile_count++;
-        }
-    }
-    rewinddir(dir);
+    std::vector<std::string> tile_paths;
 
-    tiles = (Tile *)malloc(tile_count * sizeof(Tile));
-    int index = 0;
+    // Step 1: Collect all .jpg and .png paths
     while ((entry = readdir(dir)) != NULL)
     {
         if (strstr(entry->d_name, ".jpg") || strstr(entry->d_name, ".png"))
         {
             char full_path[512];
             snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
-            process_tile(full_path, &tiles[index++]);
+            tile_paths.push_back(full_path);
         }
     }
     closedir(dir);
+
+    tile_count = tile_paths.size();
+    tiles = (Tile *)malloc(tile_count * sizeof(Tile));
+
+// Step 2: Process each tile in parallel
+#pragma omp parallel for
+    for (int i = 0; i < tile_paths.size(); i++)
+    {
+        process_tile(tile_paths[i].c_str(), &tiles[i]);
+    }
 }
 
 // Loads the target image, resizes it to the enlarged size
@@ -122,7 +126,7 @@ void build_mosaic(Mat *target_img)
 {
     Mat mosaic = target_img->clone();
 
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int y = 0; y < target_img->rows; y += TILE_SIZE)
     {
         for (int x = 0; x < target_img->cols; x += TILE_SIZE)
