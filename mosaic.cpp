@@ -22,22 +22,26 @@ typedef struct
 Tile *tiles;
 int tile_count = 0;
 
+// Loads an image, crops it square, and resizes into both large and small versions
 void process_tile(const char *tile_path, Tile *tile)
 {
     Mat img = imread(tile_path);
     if (img.empty())
         return;
 
+    // Crops the center image to a square
     int min_dim = img.cols < img.rows ? img.cols : img.rows;
     Rect crop_region((img.cols - min_dim) / 2, (img.rows - min_dim) / 2, min_dim, min_dim);
     img = img(crop_region);
 
+    // Resizes the image to the large and small tile sizes
     resize(img, tile->large_tile, Size(TILE_SIZE, TILE_SIZE), 0, 0, INTER_LANCZOS4);
     resize(img, tile->small_tile, Size(TILE_SIZE / TILE_MATCH_RES, TILE_SIZE / TILE_MATCH_RES), 0, 0, INTER_LANCZOS4);
 
     strcpy(tile->path, tile_path);
 }
 
+//  Scans the provided directory, counts and loads .jpg or .png files, and processes each tile
 void load_tiles(const char *dir_path)
 {
     DIR *dir = opendir(dir_path);
@@ -71,6 +75,7 @@ void load_tiles(const char *dir_path)
     closedir(dir);
 }
 
+// Loads the target image, resizes it to the enlarged size
 Mat process_target_image(const char *image_path)
 {
     Mat img = imread(image_path);
@@ -81,12 +86,14 @@ Mat process_target_image(const char *image_path)
     }
     printf("Target Image Size: %d x %d\n", img.cols, img.rows);
 
+    // Resize the target image to the enlarged size (gives more detail so you can fit more tiles into the mosaic)
     int new_width = img.cols * ENLARGEMENT;
     int new_height = img.rows * ENLARGEMENT;
     resize(img, img, Size(new_width, new_height), 0, 0, INTER_LANCZOS4);
     return img;
 }
 
+// Finds the best fit tile for a given small image by comparing it with all tiles
 int find_best_fit_tile(Mat small_img)
 {
     int best_index = -1;
@@ -95,9 +102,9 @@ int find_best_fit_tile(Mat small_img)
     for (int i = 0; i < tile_count; i++)
     {
         Mat diff;
-        absdiff(small_img, tiles[i].small_tile, diff);
-        Scalar diff_sum = sum(diff);
-        double total_diff = diff_sum[0] + diff_sum[1] + diff_sum[2];
+        absdiff(small_img, tiles[i].small_tile, diff); // Uses pixel-wise absolute difference (absdiff) and color sum to find the most similar tile
+        Scalar diff_sum = sum(diff); // Sums the differences across all channels
+        double total_diff = diff_sum[0] + diff_sum[1] + diff_sum[2]; // picks the tile with the least difference in color
 
         if (total_diff < min_diff)
         {
@@ -108,6 +115,7 @@ int find_best_fit_tile(Mat small_img)
     return best_index;
 }
 
+// Builds the mosaic by iterating over the target image and replacing each tile with the best fit tile
 void build_mosaic(Mat *target_img)
 {
     Mat mosaic = target_img->clone();
