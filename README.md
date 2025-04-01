@@ -9,7 +9,15 @@ This project creates a **photo mosaic** using a target image and a collection of
 - Uses **OpenCV** for image processing.
 - Generates high-quality **grayscale** mosaic images.
 - Supports **custom tile sizes** and resolutions.
-- (Optional) **Parallelization with OpenMP** for faster processing.
+
+Branch: main
+- Single-threaded version of mosaic generator.
+- Processes tiles and image in a single thread.
+
+Branch: parallel
+- Uses OpenMP to parallelize tile processing and mosaic building.
+- Much faster on multi-core systems.
+
 
 ---
 
@@ -111,8 +119,7 @@ This project is **open-source** and free to use. Feel free to modify and improve
 ---
 
 ### 🎯 Future Enhancements
-✅ **Color Mosaic Support**  
-✅ **Multi-threading for Faster Processing**  
+✅ **Color Mosaic Support** 
 ✅ **More Image Filters & Effects**  
 
 ---
