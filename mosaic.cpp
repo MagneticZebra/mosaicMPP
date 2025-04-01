@@ -5,6 +5,8 @@
 #include <math.h>
 #include <opencv2/opencv.hpp>
 
+#include <omp.h>
+
 #define TILE_SIZE 50
 #define TILE_MATCH_RES 5
 #define ENLARGEMENT 8
@@ -102,8 +104,8 @@ int find_best_fit_tile(Mat small_img)
     for (int i = 0; i < tile_count; i++)
     {
         Mat diff;
-        absdiff(small_img, tiles[i].small_tile, diff); // Uses pixel-wise absolute difference (absdiff) and color sum to find the most similar tile
-        Scalar diff_sum = sum(diff); // Sums the differences across all channels
+        absdiff(small_img, tiles[i].small_tile, diff);               // Uses pixel-wise absolute difference (absdiff) and color sum to find the most similar tile
+        Scalar diff_sum = sum(diff);                                 // Sums the differences across all channels
         double total_diff = diff_sum[0] + diff_sum[1] + diff_sum[2]; // picks the tile with the least difference in color
 
         if (total_diff < min_diff)
@@ -120,6 +122,7 @@ void build_mosaic(Mat *target_img)
 {
     Mat mosaic = target_img->clone();
 
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < target_img->rows; y += TILE_SIZE)
     {
         for (int x = 0; x < target_img->cols; x += TILE_SIZE)
@@ -129,7 +132,7 @@ void build_mosaic(Mat *target_img)
                 continue; // Skip tiles that go out of bounds
             }
             Rect roi(x, y, TILE_SIZE, TILE_SIZE);
-            Mat small_img = (*target_img)(roi);
+            Mat small_img = (*target_img)(roi).clone(); // clone avoids shared memory issues
             resize(small_img, small_img, Size(TILE_SIZE / TILE_MATCH_RES, TILE_SIZE / TILE_MATCH_RES));
 
             int best_fit = find_best_fit_tile(small_img);
