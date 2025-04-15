@@ -124,7 +124,7 @@ python image_finder.py
 
 This script:
 
-- **Searches for images** (can adjust to find grayscale or color images).
+- **Searches for images** (can adjust to find grayscale or color tiles depending on what you need).
 - **Downloads them into the `tiles/` directory**.
 - **Resizes them to the appropriate tile size**.
 
